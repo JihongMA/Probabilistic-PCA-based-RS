@@ -190,6 +190,16 @@ sealed trait Vector extends Serializable {
    */
   @Since("2.0.0")
   def asML: newlinalg.Vector
+
+  def update(i: Int, v: Double): Unit
+
+   /**
+    * Update all the values of this vector using the function f. Performed in-place on the
+    * backing array. For example, an operation such as addition or subtraction will only be
+    * performed on the non-zero values in a `SparseVector`.
+    */
+  private[mllib] def update(f: Double => Double): Vector
+
 }
 
 /**
@@ -273,7 +283,7 @@ class VectorUDT extends UserDefinedType[Vector] {
 /**
  * Factory methods for [[org.apache.spark.mllib.linalg.Vector]].
  * We don't use the name `Vector` because Scala imports
- * `scala.collection.immutable.Vector` by default.
+ * [[scala.collection.immutable.Vector]] by default.
  */
 @Since("1.0.0")
 object Vectors {
@@ -714,6 +724,17 @@ class DenseVector @Since("1.0.0") (
   override def asML: newlinalg.DenseVector = {
     new newlinalg.DenseVector(values)
   }
+
+  override def update(i: Int, v: Double): Unit = {
+    values(i) = v
+  }
+
+  override private[mllib] def update(f: Double => Double): DenseVector = {
+    for (i <- 0 until values.length)
+      values(i) = f(values(i))
+    this
+  }
+
 }
 
 @Since("1.3.0")
@@ -925,6 +946,19 @@ class SparseVector @Since("1.0.0") (
   override def asML: newlinalg.SparseVector = {
     new newlinalg.SparseVector(size, indices, values)
   }
+
+  override def update(i: Int, v: Double): Unit = {
+    values(i) = v
+  }
+
+  // for SparseVector only updates existing index entries
+  override private[mllib] def update(f: Double => Double): SparseVector = {
+    for ( i <- 0 until values.length) {
+      values(i) = f(values(i))
+    }
+    this
+  }
+
 }
 
 @Since("1.3.0")

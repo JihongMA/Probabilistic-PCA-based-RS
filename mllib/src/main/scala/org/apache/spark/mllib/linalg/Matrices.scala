@@ -356,6 +356,17 @@ class DenseMatrix @Since("1.3.0") (
     this
   }
 
+  private[mllib] def updateEye(v: Double): DenseMatrix = {
+    require( numRows == numCols)
+    val len = numRows
+    var i = 0
+    while (i < len) {
+      values(index(i, i)) = v
+      i += 1
+    }
+    this
+  }
+
   @Since("1.3.0")
   override def transpose: DenseMatrix = new DenseMatrix(numCols, numRows, values, !isTransposed)
 
@@ -440,6 +451,7 @@ class DenseMatrix @Since("1.3.0") (
   override def asML: newlinalg.DenseMatrix = {
     new newlinalg.DenseMatrix(numRows, numCols, values, isTransposed)
   }
+
 }
 
 /**
